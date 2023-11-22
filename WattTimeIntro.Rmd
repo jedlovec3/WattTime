@@ -1,0 +1,138 @@
+---
+title: "WattTime Intro"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(httr2)
+library(jsonlite)
+```
+
+Register for WattCarbon API
+
+Python3 API call
+
+import requests
+register_url = 'https://api2.watttime.org/v2/register'
+params = {'username': 'freddo',
+         'password': 'the_frog',
+         'email': 'freddo@frog.org',
+         'org': 'freds world'}
+rsp = requests.post(register_url, json=params)
+print(rsp.text)
+
+
+ONLY RUN ONCE!
+```{r eval=FALSE, include=FALSE}
+
+#Sys.setenv(watttime_pw = '***')
+
+watttime_pw <- Sys.getenv("watttime_pw")
+
+req <- request('https://api2.watttime.org/v2/register') %>% 
+  req_body_json(list('username' = 'jedlovec3', 
+              'password' = watttime_pw ,
+              'email' = 'ben.jedlovec+watttime@gmail.com',
+              'org' = 'self'))
+
+#req %>% req_dry_run()
+
+resp <- req_perform(req)
+resp_json <- resp %>% resp_body_json()
+data_df <- as.data.frame(resp_json)
+data_df
+```
+
+
+Login & Obtain Token
+
+Python3 Example
+login_url = 'https://api2.watttime.org/v2/login'
+rsp = requests.get(login_url, auth=HTTPBasicAuth('freddo', 'the_frog'))
+
+```{r}
+req <- request('https://api2.watttime.org/v2/login') %>% 
+  req_auth_basic("jedlovec3", watttime_pw)
+
+resp <- req_perform(req)
+resp_json <- resp %>% resp_body_json()
+data_df <- as.data.frame(resp_json)
+data_df
+
+api_token <- data_df$token
+
+api_token
+```
+Basic Request for accessible 
+
+login_url = 'https://api2.watttime.org/v2/login'
+token = requests.get(login_url, auth=HTTPBasicAuth('freddo', 'the_frog')).json()['token']
+
+list_url = 'https://api2.watttime.org/v2/ba-access'
+headers = {'Authorization': 'Bearer {}'.format(token)}
+params = {'all': 'false'}
+rsp=requests.get(list_url, headers=headers, params=params)
+print(rsp.text)
+
+```{r}
+
+req <- request('https://api2.watttime.org/v2/ba-access') %>% 
+  req_headers(Authorization = paste("Bearer", api_token)) %>% 
+  req_url_query('all' = 'false')
+
+resp <- req_perform(req)
+
+#resp %>% resp_body_json()
+
+resp_json <- resp %>% resp_body_json()
+data_df <- as.data.frame(resp_json)
+data_df
+
+#resp %>% resp_headers()
+
+
+```
+
+
+```{r}
+
+req <- request('https://api2.watttime.org/v2/ba-access') %>% 
+  req_headers(Authorization = paste("Bearer", api_token)) %>% 
+  req_url_query('all' = 'true')
+
+resp <- req_perform(req)
+
+#resp %>% resp_body_json()
+
+resp_json <- resp %>% resp_body_json()
+data_df <- as.data.frame(resp_json)
+data_df
+
+```
+
+Formatting gets weird if returning multiple responses in JSON
+- Will need to investigate in future
+
+```{r}
+
+req <- request('https://api2.watttime.org/index') %>% 
+  req_headers(Authorization = paste("Bearer", api_token)) %>% 
+  #req_url_query('ba' = 'PJM_NJ')
+  req_url_query('ba' = 'CAISO_NORTH')
+
+resp <- req_perform(req)
+
+#resp %>% resp_body_json()
+
+resp_json <- resp %>% resp_body_json()
+data_df <- as.data.frame(resp_json)
+data_df
+
+```
+
+```{r}
+
+```
+
+
